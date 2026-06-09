@@ -189,6 +189,7 @@ class EventRepository {
               ..isAllDay = event.isAllDay
               ..recurrenceRule = event.recurrenceRule
               ..lunarRecurrence = event.lunarRecurrence
+              ..isCompleted = event.isCompleted,
           );
         }
       }
@@ -433,6 +434,7 @@ class EventRepository {
               ..isAllDay = event.isAllDay
               ..recurrenceRule = event.recurrenceRule
               ..lunarRecurrence = event.lunarRecurrence
+              ..isCompleted = event.isCompleted,
           );
       }
     }
