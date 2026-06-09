@@ -42,6 +42,19 @@ class EventModel {
   /// 是否已完成/归档
   bool isCompleted = false;
 
+  /// 弹性习惯开关
+  @Index()
+  bool isFlexibleHabit = false;
+
+  /// 弹性习惯内容 1
+  String? flexibleHabit1;
+
+  /// 弹性习惯内容 2
+  String? flexibleHabit2;
+
+  /// 弹性习惯内容 3
+  String? flexibleHabit3;
+
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();
 }

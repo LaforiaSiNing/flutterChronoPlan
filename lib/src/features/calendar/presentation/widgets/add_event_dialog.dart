@@ -43,6 +43,12 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
   int? _selectedDay; // 1-31
   int? _selectedWeekday; // 1-7（周一~周日）
   bool _isLunar = false;
+
+  // 弹性习惯相关
+  bool _isFlexibleHabit = false;
+  late TextEditingController _flexibleHabit1Controller;
+  late TextEditingController _flexibleHabit2Controller;
+  late TextEditingController _flexibleHabit3Controller;
   
   @override
   void initState() {
@@ -52,6 +58,11 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
     _titleController = TextEditingController(text: event?.title ?? widget.initialTitle);
     _descriptionController = TextEditingController(text: event?.description);
     _locationController = TextEditingController(text: event?.location);
+
+    // 弹性习惯控制器（在 _locationController = ... 后面添加）
+    _flexibleHabit1Controller = TextEditingController();
+    _flexibleHabit2Controller = TextEditingController();
+    _flexibleHabit3Controller = TextEditingController();
     
     // 默认值：基于当前选择日期
     _selectedMonth = widget.selectedDate.month;
@@ -119,6 +130,13 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
           }
         }
       }
+
+      // ✅ 弹性习惯数据回填（放在这里，紧挨着 if (event != null) 的结束大括号前面）
+      _isFlexibleHabit = event.isFlexibleHabit;
+      _flexibleHabit1Controller.text = event.flexibleHabit1 ?? '';
+      _flexibleHabit2Controller.text = event.flexibleHabit2 ?? '';
+      _flexibleHabit3Controller.text = event.flexibleHabit3 ?? '';
+
     } else {
       // 默认：开始 00:00，结束 23:59（只记录小时和分钟）
       _startTime = const TimeOfDay(hour: 0, minute: 0);
@@ -233,6 +251,10 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
     _titleController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
+    // ✅ 新增弹性习惯控制器释放
+    _flexibleHabit1Controller.dispose();
+    _flexibleHabit2Controller.dispose();
+    _flexibleHabit3Controller.dispose();
     super.dispose();
   }
 
@@ -323,7 +345,49 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
                   ],
                   onChanged: (v) => setState(() => _priority = v!),
                 ),
+                 const SizedBox(height: 16),
+                DropdownButtonFormField<bool>(
+                  value: _isFlexibleHabit,
+                  decoration: const InputDecoration(
+                    labelText: '弹性习惯',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.auto_awesome),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: false, child: Text('关闭')),
+                    DropdownMenuItem(value: true, child: Text('开启')),
+                  ],
+                  onChanged: (v) => setState(() => _isFlexibleHabit = v!),
+                ),
+                if (_isFlexibleHabit) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _flexibleHabit1Controller,
+                    decoration: const InputDecoration(
+                      labelText: '弹性习惯 1',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _flexibleHabit2Controller,
+                    decoration: const InputDecoration(
+                      labelText: '弹性习惯 2',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _flexibleHabit3Controller,
+                    decoration: const InputDecoration(
+                      labelText: '弹性习惯 3',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
+                  // 后面保持原样不动...
+                
                 categoriesAsync.when(
                   data: (categories) {
                     // Ensure selected category exists in list or fallback
@@ -464,6 +528,10 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
           ..category = _selectedCategory
           ..recurrenceRule = rrule
           ..lunarRecurrence = lunarRecurrence
+          ..isFlexibleHabit = _isFlexibleHabit              // ✅ 新增
+          ..flexibleHabit1 = _flexibleHabit1Controller.text  // ✅ 新增
+          ..flexibleHabit2 = _flexibleHabit2Controller.text  // ✅ 新增
+          ..flexibleHabit3 = _flexibleHabit3Controller.text  // ✅ 新增
           ..updatedAt = DateTime.now();
         
         // 说明：
@@ -481,8 +549,11 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
           ..priority = _priority
           ..category = _selectedCategory
           ..recurrenceRule = rrule
-          ..lunarRecurrence = lunarRecurrence;
-        
+          ..lunarRecurrence = lunarRecurrence
+          ..isFlexibleHabit = _isFlexibleHabit              // ✅ 新增
+          ..flexibleHabit1 = _flexibleHabit1Controller.text  // ✅ 新增
+          ..flexibleHabit2 = _flexibleHabit2Controller.text  // ✅ 新增
+          ..flexibleHabit3 = _flexibleHabit3Controller.text; // ✅ 新增
         await repository.addEvent(newEvent);
       }
       
