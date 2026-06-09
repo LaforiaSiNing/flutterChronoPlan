@@ -81,9 +81,9 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
         _recurrenceType = 'yearly';
         }
       } else if (event.recurrenceRule != null) {
-        if (event.recurrenceRule!.contains('FREQ=DAILY')) {   // ← 新增
-          _recurrenceType = 'daily';                          // ← 新增
-        else if (event.recurrenceRule!.contains('FREQ=WEEKLY')) {
+        if (event.recurrenceRule!.contains('FREQ=DAILY')) {
+        _recurrenceType = 'daily';
+        } else if (event.recurrenceRule!.contains('FREQ=WEEKLY')) {
           _recurrenceType = 'weekly';
           // 解析周几
           final byDayMatch = RegExp(r'BYDAY=(\w+)').firstMatch(event.recurrenceRule!);
