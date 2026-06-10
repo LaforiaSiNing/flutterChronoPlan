@@ -268,7 +268,7 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
       content: Builder(
         builder: (context) {
           final screenWidth = MediaQuery.of(context).size.width;
-          final dialogWidth = screenWidth > 600 ? 500.0 : screenWidth * 0.8;
+          final dialogWidth = screenWidth > 600 ? 450.0 : screenWidth * 0.8;
           return SizedBox(
             width: dialogWidth,
             child: SingleChildScrollView(

@@ -92,9 +92,12 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: LayoutBuilder(
                         builder: (context, constraints) {
-                          const daysOfWeekHeight = 40.0;
+                          // 星期标题高度略微降低，更紧凑
+                          const daysOfWeekHeight = 36.0;
                           final cellSize = constraints.maxWidth / 7;
-                          final desiredCalendarHeight = daysOfWeekHeight + cellSize * 6;
+                          // 行高设为宽度的85%，使格子不再完全正方形，更紧凑
+                          final rowHeight = cellSize * 0.85;
+                          final desiredCalendarHeight = daysOfWeekHeight + rowHeight * 6;
 
                           Widget calendar = TableCalendar(
                             locale: 'zh_CN',
@@ -122,7 +125,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                               weekdayStyle: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                               weekendStyle: TextStyle(fontSize: 14, color: Colors.red[300]),
                             ),
-                            rowHeight: cellSize,
+                            rowHeight: rowHeight, // 使用压缩后的行高
                         
                             eventLoader: (day) {
                               return monthEventsAsync.when(
@@ -142,8 +145,10 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                               
                               markerBuilder: (context, day, events) {
                                 if (events.isEmpty) return null;
+                                // 将标记从底部中央改为左上角，避免遮挡单元格内容
                                 return Positioned(
-                                  bottom: 2,
+                                  top: 2,
+                                  left: 2,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                                     decoration: BoxDecoration(
@@ -226,9 +231,15 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                             ),
                           );
                         }
+                        // 使用 prototypeItem 强制设置每项高度为原来的 75%，配合内部已压缩的 EventListItem 达到整体紧凑
                         return ListView.builder(
                           padding: const EdgeInsets.only(top: 8),
                           itemCount: events.length,
+                          // 设置一个较矮的参考项，使每项高度固定为约 60（原来约 80）
+                          prototypeItem: SizedBox(
+                            height: 60,
+                            child: EventListItem(event: events.first),
+                          ),
                           itemBuilder: (context, index) {
                             final event = events[index];
                             return EventListItem(event: event);
@@ -413,7 +424,8 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                   Text(
                     '${day.day}',
                     style: TextStyle(
-                      fontSize: 18,
+                      // 日期数字缩小，更紧凑
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: dateColor,
                     ),
@@ -422,7 +434,8 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                   Text(
                     displayText,
                     style: TextStyle(
-                      fontSize: 11,
+                      // 农历文字也稍微缩小
+                      fontSize: 10,
                       color: lunarColor,
                     ),
                     maxLines: 1,
