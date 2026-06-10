@@ -6,7 +6,7 @@ import '../../domain/event_model.dart';
 import '../../../categories/application/category_providers.dart';
 
 import 'package:isar/isar.dart'; //已完成日程相关
-
+import '../../application/calendar_providers.dart';//修改bug
 import 'add_event_dialog.dart';
 
 class EventListItem extends ConsumerWidget {
@@ -216,6 +216,8 @@ class EventListItem extends ConsumerWidget {
                             }
                             await repo.updateEvent(master);
                             onCompletionChanged?.call();
+                            // 强制刷新当天日程列表，确保复选框状态立即更新
+                            ref.invalidate(dayEventsProvider(event.startTime));//修改每周，不重复无法框选
                           },//已完成日程选项。
                         ),
                       ),
