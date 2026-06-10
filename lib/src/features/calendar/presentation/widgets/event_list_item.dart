@@ -5,6 +5,8 @@ import '../../data/event_repository.dart';
 import '../../domain/event_model.dart';
 import '../../../categories/application/category_providers.dart';
 
+import 'package:isar/isar.dart'; //已完成日程相关
+
 import 'add_event_dialog.dart';
 
 class EventListItem extends ConsumerWidget {
@@ -163,12 +165,16 @@ class EventListItem extends ConsumerWidget {
                         value: event.isCompleted,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                         activeColor: categoryColor,
-                        onChanged: (val) async {
-                           final updatedEvent = event..isCompleted = val ?? false;
-                           await ref.read(eventRepositoryProvider).updateEvent(updatedEvent);
-                           // 如果提供了回调，调用它来刷新搜索结果
-                           onCompletionChanged?.call();
-                        },
+                        onChanged: (val) async {////增加完成日程选项
+                          final repo = ref.read(eventRepositoryProvider);
+                          final isar = await repo.db;
+                          final master = await isar.eventModels.get(event.id);
+                          if (master != null) {
+                            master.isCompleted = val ?? false;
+                            await repo.updateEvent(master);
+                            onCompletionChanged?.call();
+                          }
+                        },//已完成日程选项。
                       ),
                     ),
                     const SizedBox(width: 4),

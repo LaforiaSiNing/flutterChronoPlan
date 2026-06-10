@@ -44,7 +44,7 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
   int? _selectedWeekday; // 1-7（周一~周日）
   bool _isLunar = false;
 
-  // 弹性习惯相关
+  // 弹性计划相关
   bool _isFlexibleHabit = false;
   late TextEditingController _flexibleHabit1Controller;
   late TextEditingController _flexibleHabit2Controller;
@@ -59,7 +59,7 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
     _descriptionController = TextEditingController(text: event?.description);
     _locationController = TextEditingController(text: event?.location);
 
-    // 弹性习惯控制器（在 _locationController = ... 后面添加）
+    // 弹性计划控制器（在 _locationController = ... 后面添加）
     _flexibleHabit1Controller = TextEditingController();
     _flexibleHabit2Controller = TextEditingController();
     _flexibleHabit3Controller = TextEditingController();
@@ -131,7 +131,7 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
         }
       }
 
-      // ✅ 弹性习惯数据回填（放在这里，紧挨着 if (event != null) 的结束大括号前面）
+      // ✅ 弹性计划数据回填（放在这里，紧挨着 if (event != null) 的结束大括号前面）
       _isFlexibleHabit = event.isFlexibleHabit;
       _flexibleHabit1Controller.text = event.flexibleHabit1 ?? '';
       _flexibleHabit2Controller.text = event.flexibleHabit2 ?? '';
@@ -349,7 +349,7 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
                 DropdownButtonFormField<bool>(
                   value: _isFlexibleHabit,
                   decoration: const InputDecoration(
-                    labelText: '弹性习惯',
+                    labelText: '弹性计划',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.auto_awesome),
                   ),
@@ -364,7 +364,7 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
                   TextFormField(
                     controller: _flexibleHabit1Controller,
                     decoration: const InputDecoration(
-                      labelText: '弹性习惯 1',
+                      labelText: '弹性计划 1',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -372,7 +372,7 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
                   TextFormField(
                     controller: _flexibleHabit2Controller,
                     decoration: const InputDecoration(
-                      labelText: '弹性习惯 2',
+                      labelText: '弹性计划 2',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -380,7 +380,7 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
                   TextFormField(
                     controller: _flexibleHabit3Controller,
                     decoration: const InputDecoration(
-                      labelText: '弹性习惯 3',
+                      labelText: '弹性计划 3',
                       border: OutlineInputBorder(),
                     ),
                   ),

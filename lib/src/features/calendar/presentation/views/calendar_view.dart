@@ -125,7 +125,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                           return monthEventsAsync.when(
                             data: (events) {
                               // 事件在仓库层已对“重复规则”展开到当月；这里仅按天过滤
-                              return events.where((e) => isSameDay(e.startTime, day)).toList();
+                              return events.where((e) => isSameDay(e.startTime, day) && !e.isCompleted).toList();//已完成日程修改
                             },
                             loading: () => [],
                             error: (_, __) => [],
