@@ -39,21 +39,24 @@ class EventModel {
   /// 格式："LUNAR;MONTH=1;DAY=1"（农历正月初一）
   String? lunarRecurrence;
 
-  /// 是否已完成/归档
+  /// 是否已完成/归档（主要用于非重复事件）
   bool isCompleted = false;
 
-  /// 弹性计划开关
+  /// 弹性习惯开关
   @Index()
   bool isFlexibleHabit = false;
 
-  /// 弹性计划内容 1
+  /// 弹性习惯内容 1
   String? flexibleHabit1;
 
-  /// 弹性计划内容 2
+  /// 弹性习惯内容 2
   String? flexibleHabit2;
 
-  /// 弹性计划内容 3
+  /// 弹性习惯内容 3
   String? flexibleHabit3;
+
+  /// 重复事件的已完成实例日期列表，逗号分隔的 yyyy-MM-dd 格式
+  String? completedDates;
 
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();

@@ -5,6 +5,7 @@ import 'package:lunar/lunar.dart'; // 农历相关（节日/农历重复）
 import 'package:flutter/foundation.dart';
 import '../../../core/database/isar_database.dart';
 import '../domain/event_model.dart';
+import 'package:intl/intl.dart'; //实例分开，让每日计划单独管理
 
 final eventRepositoryProvider = Provider<EventRepository>((ref) {
   return EventRepository(ref.watch(isarProvider.future));
@@ -189,7 +190,7 @@ class EventRepository {
               ..isAllDay = event.isAllDay
               ..recurrenceRule = event.recurrenceRule
               ..lunarRecurrence = event.lunarRecurrence
-              ..isCompleted = event.isCompleted,
+              ..isCompleted = _isDateCompleted(event, instanceStart),
           );
         }
       }
@@ -293,7 +294,7 @@ class EventRepository {
                   ..isAllDay = event.isAllDay
                   ..recurrenceRule = event.recurrenceRule
                   ..lunarRecurrence = event.lunarRecurrence
-                  ..isCompleted = event.isCompleted,
+                  ..isCompleted = _isDateCompleted(event, instanceStart),
               );
             }
           }
@@ -348,7 +349,7 @@ class EventRepository {
                 ..isAllDay = event.isAllDay
                 ..recurrenceRule = event.recurrenceRule
                 ..lunarRecurrence = event.lunarRecurrence
-                ..isCompleted = event.isCompleted,
+                ..isCompleted = _isDateCompleted(event, instanceStart),
             );
           }
         }
@@ -434,11 +435,19 @@ class EventRepository {
               ..isAllDay = event.isAllDay
               ..recurrenceRule = event.recurrenceRule
               ..lunarRecurrence = event.lunarRecurrence
-              ..isCompleted = event.isCompleted,
+              ..isCompleted = _isDateCompleted(event, instanceStart),
           );
       }
     }
   }
+
+    /// 根据主记录的 completedDates 判断某个具体日期是否已完成
+  bool _isDateCompleted(EventModel event, DateTime date) {
+    if (event.completedDates == null || event.completedDates!.isEmpty) return false;
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
+    return event.completedDates!.split(',').contains(dateStr);
+  }
+
 
   Future<List<EventModel>> searchEvents(String query, {Set<String>? categories}) async {
     final isar = await db;
@@ -451,13 +460,13 @@ class EventRepository {
     } else {
       // 先获取所有匹配关键词的结果
       allResults = await isar.eventModels
-        .filter()
-        .titleContains(query, caseSensitive: false)
-        .or()
-        .descriptionContains(query, caseSensitive: false)
-        .or()
-        .locationContains(query, caseSensitive: false)
-        .findAll();
+          .filter()
+          .titleContains(query, caseSensitive: false)
+          .or()
+          .descriptionContains(query, caseSensitive: false)
+          .or()
+          .locationContains(query, caseSensitive: false)
+          .findAll();
     }
     
     // 如果指定了分类筛选，过滤结果
