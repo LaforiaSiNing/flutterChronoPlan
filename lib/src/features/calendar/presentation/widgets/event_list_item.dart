@@ -41,7 +41,7 @@ class EventListItem extends ConsumerWidget {
 
     return Card(
       // 上下间距从6缩小为4，压缩整体高度
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       elevation: 0,
       color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3), // 更轻的背景色，自动跟随主题
       shape: RoundedRectangleBorder(
@@ -61,7 +61,7 @@ class EventListItem extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           // 卡片内边距从12缩小为9，进一步压缩高度
-          padding: const EdgeInsets.all(9.0),
+          padding: const EdgeInsets.all(12.0),
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
