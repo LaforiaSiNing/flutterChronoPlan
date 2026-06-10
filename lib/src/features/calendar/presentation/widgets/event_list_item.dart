@@ -158,39 +158,68 @@ class EventListItem extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                     ],
-                    SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Checkbox(
-                        value: event.isCompleted,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                        activeColor: categoryColor,
-                        onChanged: (val) async {
-                          final repo = ref.read(eventRepositoryProvider);
-                          final isar = await repo.db;
-                          final master = await isar.eventModels.get(event.id);
-                          if (master == null) return;
-
-                          final dateStr = DateFormat('yyyy-MM-dd').format(event.startTime);
-
-                          if (master.recurrenceRule != null || master.lunarRecurrence != null) {
-                            // 重复事件：更新 completedDates 列表
-                            final dates = master.completedDates?.split(',').where((s) => s.isNotEmpty).toList() ?? [];
-                            if (val == true) {
-                              if (!dates.contains(dateStr)) dates.add(dateStr);
-                            } else {
-                              dates.remove(dateStr);
-                            }
-                            master.completedDates = dates.isEmpty ? null : dates.join(',');
-                          } else {
-                            // 普通事件：直接修改 isCompleted
-                            master.isCompleted = val ?? false;
-                          }
-                          await repo.updateEvent(master);
-                          onCompletionChanged?.call();
-                        },//已完成日程选项。
+                    // 根据是否为弹性计划显示不同的勾选组件
+                    if (event.isFlexibleHabit) ...[
+                      // 弹性计划：三个子目标复选框
+                      _buildFlexSubCheckbox(
+                        context,
+                        ref,
+                        event.flexibleHabit1 ?? '一级',
+                        event.flexibleHabit1Completed,
+                        (val) => _toggleFlexibleDate(ref, 1, val),
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      _buildFlexSubCheckbox(
+                        context,
+                        ref,
+                        event.flexibleHabit2 ?? '二级',
+                        event.flexibleHabit2Completed,
+                        (val) => _toggleFlexibleDate(ref, 2, val),
+                      ),
+                      const SizedBox(height: 4),
+                      _buildFlexSubCheckbox(
+                        context,
+                        ref,
+                        event.flexibleHabit3 ?? '三级',
+                        event.flexibleHabit3Completed,
+                        (val) => _toggleFlexibleDate(ref, 3, val),
+                      ),
+                    ] else ...[
+                      // 普通日程的单个复选框（保持原有逻辑）
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: event.isCompleted,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          activeColor: categoryColor,
+                          onChanged: (val) async {
+                            final repo = ref.read(eventRepositoryProvider);
+                            final isar = await repo.db;
+                            final master = await isar.eventModels.get(event.id);
+                            if (master == null) return;
+
+                            final dateStr = DateFormat('yyyy-MM-dd').format(event.startTime);
+
+                            if (master.recurrenceRule != null || master.lunarRecurrence != null) {
+                              // 重复事件：更新 completedDates 列表
+                              final dates = master.completedDates?.split(',').where((s) => s.isNotEmpty).toList() ?? [];
+                              if (val == true) {
+                                if (!dates.contains(dateStr)) dates.add(dateStr);
+                              } else {
+                                dates.remove(dateStr);
+                              }
+                              master.completedDates = dates.isEmpty ? null : dates.join(',');
+                            } else {
+                              // 普通事件：直接修改 isCompleted
+                              master.isCompleted = val ?? false;
+                            }
+                            await repo.updateEvent(master);
+                            onCompletionChanged?.call();
+                          },//已完成日程选项。
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 4),
                     IconButton(
                       icon: const Icon(Icons.delete_outline, size: 20, color: Colors.grey),
@@ -207,6 +236,60 @@ class EventListItem extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// 弹性计划子目标复选框构建器
+  Widget _buildFlexSubCheckbox(BuildContext context, WidgetRef ref, String text, bool value, Function(bool?) onChanged) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 24,
+          height: 24,
+          child: Checkbox(
+            value: value,
+            onChanged: onChanged,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 切换弹性计划某个子目标的完成状态（更新对应日期列表）
+  Future<void> _toggleFlexibleDate(WidgetRef ref, int index, bool? value) async {
+    final repo = ref.read(eventRepositoryProvider);
+    final isar = await repo.db;
+    final master = await isar.eventModels.get(event.id);
+    if (master == null) return;
+    final dateStr = DateFormat('yyyy-MM-dd').format(event.startTime);
+    String? targetList;
+    switch (index) {
+      case 1: targetList = master.flexibleHabit1CompletedDates; break;
+      case 2: targetList = master.flexibleHabit2CompletedDates; break;
+      case 3: targetList = master.flexibleHabit3CompletedDates; break;
+      default: return;
+    }
+    final dates = targetList?.split(',').where((s) => s.isNotEmpty).toList() ?? [];
+    if (value == true) {
+      if (!dates.contains(dateStr)) dates.add(dateStr);
+    } else {
+      dates.remove(dateStr);
+    }
+    final newList = dates.isEmpty ? null : dates.join(',');
+    switch (index) {
+      case 1: master.flexibleHabit1CompletedDates = newList; break;
+      case 2: master.flexibleHabit2CompletedDates = newList; break;
+      case 3: master.flexibleHabit3CompletedDates = newList; break;
+    }
+    await repo.updateEvent(master);
+    onCompletionChanged?.call();
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref) {

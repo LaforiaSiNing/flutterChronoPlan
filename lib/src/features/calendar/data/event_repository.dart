@@ -5,7 +5,7 @@ import 'package:lunar/lunar.dart'; // 农历相关（节日/农历重复）
 import 'package:flutter/foundation.dart';
 import '../../../core/database/isar_database.dart';
 import '../domain/event_model.dart';
-import 'package:intl/intl.dart'; //实例分开，让每日计划单独管理
+import 'package:intl/intl.dart'; // 日期格式化，用于弹性计划与重复事件日期判断
 
 final eventRepositoryProvider = Provider<EventRepository>((ref) {
   return EventRepository(ref.watch(isarProvider.future));
@@ -22,7 +22,7 @@ class EventRepository {
     // 月视图查询：
     // - 普通日程：直接按时间范围查询
     // - 重复日程：取出所有重复规则，在内存中展开到当前月份
-    
+
     final isar = await db;
     final start = DateTime(month.year, month.month, 1);
     final end = DateTime(month.year, month.month + 1, 1).subtract(const Duration(milliseconds: 1));
@@ -81,10 +81,10 @@ class EventRepository {
       }
       return true;
     }());
-    
+
     return allEvents;
   }
-  
+
   Future<List<EventModel>> getEventsForDay(DateTime day) async {
     final isar = await db;
     final start = DateTime(day.year, day.month, day.day);
@@ -140,9 +140,9 @@ class EventRepository {
       if (_tryExpandSimpleRRuleFallback(event, ruleBody, start, end, outList)) {
         return;
       }
-      
+
       final rrule = RecurrenceRule.fromString(ruleStr);
-      
+
       // rrule 包要求 start/after/before 必须是 UTC（isUtc=true），否则会触发断言：
       // `start.isValidRruleDateTime`.
       // 同时为了避免跨月/跨年边界丢实例，这里在查询区间两端各留 1 天 buffer。
@@ -190,7 +190,19 @@ class EventRepository {
               ..isAllDay = event.isAllDay
               ..recurrenceRule = event.recurrenceRule
               ..lunarRecurrence = event.lunarRecurrence
-              ..isCompleted = _isDateCompleted(event, instanceStart),
+              // 弹性计划相关字段复制
+              ..isFlexibleHabit = event.isFlexibleHabit
+              ..flexibleHabit1 = event.flexibleHabit1
+              ..flexibleHabit2 = event.flexibleHabit2
+              ..flexibleHabit3 = event.flexibleHabit3
+              // 弹性计划三个子任务的当日完成状态（根据日期列表判断）
+              ..flexibleHabit1Completed = _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+              ..flexibleHabit2Completed = _isDateInList(event.flexibleHabit2CompletedDates, instanceStart)
+              ..flexibleHabit3Completed = _isDateInList(event.flexibleHabit3CompletedDates, instanceStart)
+              // 整体完成判断：弹性计划仅当一级目标完成即视为完成；普通重复事件使用 completedDates 判断
+              ..isCompleted = event.isFlexibleHabit
+                  ? _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+                  : _isDateCompleted(event, instanceStart),
           );
         }
       }
@@ -294,7 +306,16 @@ class EventRepository {
                   ..isAllDay = event.isAllDay
                   ..recurrenceRule = event.recurrenceRule
                   ..lunarRecurrence = event.lunarRecurrence
-                  ..isCompleted = _isDateCompleted(event, instanceStart),
+                  ..isFlexibleHabit = event.isFlexibleHabit
+                  ..flexibleHabit1 = event.flexibleHabit1
+                  ..flexibleHabit2 = event.flexibleHabit2
+                  ..flexibleHabit3 = event.flexibleHabit3
+                  ..flexibleHabit1Completed = _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+                  ..flexibleHabit2Completed = _isDateInList(event.flexibleHabit2CompletedDates, instanceStart)
+                  ..flexibleHabit3Completed = _isDateInList(event.flexibleHabit3CompletedDates, instanceStart)
+                  ..isCompleted = event.isFlexibleHabit
+                      ? _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+                      : _isDateCompleted(event, instanceStart),
               );
             }
           }
@@ -349,7 +370,16 @@ class EventRepository {
                 ..isAllDay = event.isAllDay
                 ..recurrenceRule = event.recurrenceRule
                 ..lunarRecurrence = event.lunarRecurrence
-                ..isCompleted = _isDateCompleted(event, instanceStart),
+                ..isFlexibleHabit = event.isFlexibleHabit
+                ..flexibleHabit1 = event.flexibleHabit1
+                ..flexibleHabit2 = event.flexibleHabit2
+                ..flexibleHabit3 = event.flexibleHabit3
+                ..flexibleHabit1Completed = _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+                ..flexibleHabit2Completed = _isDateInList(event.flexibleHabit2CompletedDates, instanceStart)
+                ..flexibleHabit3Completed = _isDateInList(event.flexibleHabit3CompletedDates, instanceStart)
+                ..isCompleted = event.isFlexibleHabit
+                    ? _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+                    : _isDateCompleted(event, instanceStart),
             );
           }
         }
@@ -396,12 +426,12 @@ class EventRepository {
   void _expandLunarRecurrence(EventModel event, DateTime start, DateTime end, List<EventModel> outList) {
     // 格式： "LUNAR;MONTH=1;DAY=1"（例如农历正月初一）
     // 做法：遍历 [start, end] 的每一天，计算其农历并匹配目标农历日期
-    
+
     // 解析目标农历日期
     final parts = event.lunarRecurrence!.split(';');
     int? targetMonth;
     int? targetDay;
-    
+
     for (var p in parts) {
       if (p.startsWith('MONTH=')) targetMonth = int.tryParse(p.split('=')[1]);
       if (p.startsWith('DAY=')) targetDay = int.tryParse(p.split('=')[1]);
@@ -411,17 +441,17 @@ class EventRepository {
 
     // 说明：农历映射不线性，很难“跳跃式”计算；
     // 月视图最多 30~40 天，逐日检查成本很低
-    
+
     for (var d = start; d.isBefore(end) || d.isAtSameMomentAs(end); d = d.add(const Duration(days: 1))) {
       final solar = Solar.fromDate(d);
       final lunar = solar.getLunar();
-      
+
       if (lunar.getMonth() == targetMonth && lunar.getDay() == targetDay) {
          final duration = event.endTime.difference(event.startTime);
          // 复用原日程的时分（秒/毫秒在创建时即可归一化）
          final instanceStart = DateTime(d.year, d.month, d.day, event.startTime.hour, event.startTime.minute);
          final instanceEnd = instanceStart.add(duration);
-         
+
          outList.add(
             EventModel()
               ..id = event.id
@@ -435,25 +465,40 @@ class EventRepository {
               ..isAllDay = event.isAllDay
               ..recurrenceRule = event.recurrenceRule
               ..lunarRecurrence = event.lunarRecurrence
-              ..isCompleted = _isDateCompleted(event, instanceStart),
+              ..isFlexibleHabit = event.isFlexibleHabit
+              ..flexibleHabit1 = event.flexibleHabit1
+              ..flexibleHabit2 = event.flexibleHabit2
+              ..flexibleHabit3 = event.flexibleHabit3
+              ..flexibleHabit1Completed = _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+              ..flexibleHabit2Completed = _isDateInList(event.flexibleHabit2CompletedDates, instanceStart)
+              ..flexibleHabit3Completed = _isDateInList(event.flexibleHabit3CompletedDates, instanceStart)
+              ..isCompleted = event.isFlexibleHabit
+                  ? _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+                  : _isDateCompleted(event, instanceStart),
           );
       }
     }
   }
 
-    /// 根据主记录的 completedDates 判断某个具体日期是否已完成
+  /// 判断某个日期是否在逗号分隔的日期列表中（用于弹性计划子任务完成状态）
+  bool _isDateInList(String? dateList, DateTime date) {
+    if (dateList == null || dateList.isEmpty) return false;
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
+    return dateList.split(',').contains(dateStr);
+  }
+
+  /// 根据主记录的 completedDates 判断某个具体日期是否已完成（用于普通重复事件）
   bool _isDateCompleted(EventModel event, DateTime date) {
     if (event.completedDates == null || event.completedDates!.isEmpty) return false;
     final dateStr = DateFormat('yyyy-MM-dd').format(date);
     return event.completedDates!.split(',').contains(dateStr);
   }
 
-
   Future<List<EventModel>> searchEvents(String query, {Set<String>? categories}) async {
     final isar = await db;
-    
+
     List<EventModel> allResults;
-    
+
     if (query.isEmpty) {
       // 查询为空时，返回所有事件
       allResults = await isar.eventModels.where().findAll();
@@ -468,7 +513,7 @@ class EventRepository {
           .locationContains(query, caseSensitive: false)
           .findAll();
     }
-    
+
     // 如果指定了分类筛选，过滤结果
     if (categories != null && categories.isNotEmpty) {
       final filtered = allResults
@@ -477,7 +522,7 @@ class EventRepository {
       filtered.sort((a, b) => a.startTime.compareTo(b.startTime));
       return filtered;
     }
-    
+
     allResults.sort((a, b) => a.startTime.compareTo(b.startTime));
     return allResults;
   }
@@ -507,12 +552,12 @@ class EventRepository {
       await isar.eventModels.delete(id);
     });
   }
-  
+
   Stream<List<EventModel>> watchEventsForDay(DateTime day) async* {
     // Isar watcher 不方便直接挂自定义“展开/过滤”逻辑；
     // 这里监听集合变更后重新计算当天数据（正确优先）
     final isar = await db;
-    
+
     // 监听整个集合（性能略差，但对重复展开更可靠）
     yield* isar.eventModels.watchLazy(fireImmediately: true).asyncMap((_) async {
       return await getEventsForDay(day);
