@@ -187,7 +187,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
           ),
           // 右侧：当天日程列表
           Expanded(
-            flex: 2,
+            flex: 3,//日程宽度调整
             child: Container(
               margin: const EdgeInsets.only(top: 16, right: 16, bottom: 16),
               decoration: BoxDecoration(
@@ -237,7 +237,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                           itemCount: events.length,
                           // 设置一个较矮的参考项，使每项高度固定为约 60（原来约 80）
                           prototypeItem: SizedBox(
-                            height: 75,
+                            height: 80,
                             child: EventListItem(event: events.first),
                           ),
                           itemBuilder: (context, index) {
