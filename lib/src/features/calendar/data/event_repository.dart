@@ -179,7 +179,7 @@ class EventRepository {
         if (inRange) {
            outList.add(
             EventModel()
-              ..id = event.id // 保持原 ID，便于“编辑系列”（当前实现为编辑主记录）
+              ..id = event.id
               ..title = event.title
               ..description = event.description
               ..location = event.location
@@ -190,18 +190,17 @@ class EventRepository {
               ..isAllDay = event.isAllDay
               ..recurrenceRule = event.recurrenceRule
               ..lunarRecurrence = event.lunarRecurrence
-              // 弹性计划相关字段复制
               ..isFlexibleHabit = event.isFlexibleHabit
               ..flexibleHabit1 = event.flexibleHabit1
               ..flexibleHabit2 = event.flexibleHabit2
               ..flexibleHabit3 = event.flexibleHabit3
-              // 弹性计划三个子任务的当日完成状态（根据日期列表判断）
               ..flexibleHabit1Completed = _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
               ..flexibleHabit2Completed = _isDateInList(event.flexibleHabit2CompletedDates, instanceStart)
               ..flexibleHabit3Completed = _isDateInList(event.flexibleHabit3CompletedDates, instanceStart)
-              // 整体完成判断：弹性计划仅当一级目标完成即视为完成；普通重复事件使用 completedDates 判断
               ..isCompleted = event.isFlexibleHabit
-                  ? _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+                  ? (_isDateInList(event.flexibleHabit1CompletedDates, instanceStart) ||
+                    _isDateInList(event.flexibleHabit2CompletedDates, instanceStart) ||
+                    _isDateInList(event.flexibleHabit3CompletedDates, instanceStart))
                   : _isDateCompleted(event, instanceStart),
           );
         }
@@ -314,7 +313,9 @@ class EventRepository {
                   ..flexibleHabit2Completed = _isDateInList(event.flexibleHabit2CompletedDates, instanceStart)
                   ..flexibleHabit3Completed = _isDateInList(event.flexibleHabit3CompletedDates, instanceStart)
                   ..isCompleted = event.isFlexibleHabit
-                      ? _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+                      ? (_isDateInList(event.flexibleHabit1CompletedDates, instanceStart) ||
+                        _isDateInList(event.flexibleHabit2CompletedDates, instanceStart) ||
+                        _isDateInList(event.flexibleHabit3CompletedDates, instanceStart))
                       : _isDateCompleted(event, instanceStart),
               );
             }
@@ -357,7 +358,7 @@ class EventRepository {
         if (!instanceStart.isBefore(seriesNotBefore)) {
           final instanceEnd = instanceStart.add(duration);
           if (inRange(instanceStart, instanceEnd)) {
-            outList.add(
+           outList.add(
               EventModel()
                 ..id = event.id
                 ..title = event.title
@@ -378,7 +379,9 @@ class EventRepository {
                 ..flexibleHabit2Completed = _isDateInList(event.flexibleHabit2CompletedDates, instanceStart)
                 ..flexibleHabit3Completed = _isDateInList(event.flexibleHabit3CompletedDates, instanceStart)
                 ..isCompleted = event.isFlexibleHabit
-                    ? _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+                    ? (_isDateInList(event.flexibleHabit1CompletedDates, instanceStart) ||
+                      _isDateInList(event.flexibleHabit2CompletedDates, instanceStart) ||
+                      _isDateInList(event.flexibleHabit3CompletedDates, instanceStart))
                     : _isDateCompleted(event, instanceStart),
             );
           }
@@ -473,7 +476,9 @@ class EventRepository {
               ..flexibleHabit2Completed = _isDateInList(event.flexibleHabit2CompletedDates, instanceStart)
               ..flexibleHabit3Completed = _isDateInList(event.flexibleHabit3CompletedDates, instanceStart)
               ..isCompleted = event.isFlexibleHabit
-                  ? _isDateInList(event.flexibleHabit1CompletedDates, instanceStart)
+                  ? (_isDateInList(event.flexibleHabit1CompletedDates, instanceStart) ||
+                    _isDateInList(event.flexibleHabit2CompletedDates, instanceStart) ||
+                    _isDateInList(event.flexibleHabit3CompletedDates, instanceStart))
                   : _isDateCompleted(event, instanceStart),
           );
       }
