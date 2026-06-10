@@ -54,11 +54,12 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
     final monthStart = DateTime(_focusedDay.year, _focusedDay.month, 1);
     final monthEventsAsync = ref.watch(monthEventsLoaderProvider(monthStart));
 
-    // 界面主色调：参考其他开源项目，采用优雅的蓝色
+    // 界面主色调：优雅蓝色（同时保留作为强调色）
     const Color primaryBlue = Color.fromRGBO(78, 110, 242, 1);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA), // 整体浅灰背景，更柔和
+      // 替换为动态主题背景色，支持深色模式
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: primaryBlue,
         onPressed: () {
@@ -78,7 +79,8 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
             child: Container(
               margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                // 替换为动态表面色，深色模式下自动变暗
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 // 无阴影，更扁平
               ),
@@ -117,7 +119,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                             headerVisible: false,
                             daysOfWeekHeight: daysOfWeekHeight,
                             daysOfWeekStyle: DaysOfWeekStyle(
-                              weekdayStyle: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                              weekdayStyle: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                               weekendStyle: TextStyle(fontSize: 14, color: Colors.red[300]),
                             ),
                             rowHeight: cellSize,
@@ -184,7 +186,8 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
             child: Container(
               margin: const EdgeInsets.only(top: 16, right: 16, bottom: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                // 替换为动态表面色
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -197,11 +200,13 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: Colors.grey[800],
+                        // 替换为主题文字色，适应深色模式
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ),
-                  const Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
+                  // 分割线使用主题色
+                  Divider(height: 1, thickness: 1, color: Theme.of(context).dividerColor),
                   Expanded(
                     child: eventsAsync.when(
                       data: (events) {
@@ -210,9 +215,13 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.event_busy, size: 64, color: Colors.grey[300]),
+                                Icon(Icons.event_busy, size: 64,
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
                                 const SizedBox(height: 16),
-                                Text('暂无日程', style: TextStyle(color: Colors.grey[400], fontSize: 15)),
+                                Text('暂无日程',
+                                    style: TextStyle(
+                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                        fontSize: 15)),
                               ],
                             ),
                           );
@@ -239,14 +248,14 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
     );
   }
 
-  // 自定义头部，加入主色调
+  // 自定义头部，加入主色调，深色模式下文字颜色适配
   Widget _buildCustomHeader(Color primaryColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.list, color: Colors.grey[700]),
+            icon: Icon(Icons.list, color: Theme.of(context).colorScheme.onSurface),
             tooltip: '所有日程',
             onPressed: () {
               Navigator.push(
@@ -260,7 +269,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
           DropdownButton<int>(
             value: _focusedDay.year,
             underline: const SizedBox(),
-            style: TextStyle(fontSize: 16, color: Colors.grey[800], fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500),
             items: List.generate(10, (index) => 2020 + index).map((year) {
               return DropdownMenuItem(value: year, child: Text('$year年'));
             }).toList(),
@@ -273,7 +282,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.chevron_left, color: Colors.grey[600]),
+            icon: Icon(Icons.chevron_left, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
             onPressed: () {
               setState(() {
                 _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1, _focusedDay.day);
@@ -284,7 +293,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
           DropdownButton<int>(
             value: _focusedDay.month,
             underline: const SizedBox(),
-            style: TextStyle(fontSize: 16, color: Colors.grey[800], fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500),
             items: List.generate(12, (index) => index + 1).map((month) {
               return DropdownMenuItem(value: month, child: Text('$month月'));
             }).toList(),
@@ -297,7 +306,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.chevron_right, color: Colors.grey[600]),
+            icon: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
             onPressed: () {
               setState(() {
                 _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1, _focusedDay.day);
@@ -326,7 +335,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
     );
   }
 
-  // 日历单元格构建，增加 primaryBlue 参数用于颜色统一
+  // 日历单元格构建，增加 primaryBlue 参数用于颜色统一，内部已兼容深色模式（通过字体颜色判断）
   Widget _buildCalendarCell(BuildContext context, DateTime day, bool isSelected, {bool isToday = false, bool isOutside = false, Color primaryBlue = const Color.fromRGBO(78, 110, 242, 1)}) {
     final solar = Solar.fromDate(day);
     final lunar = solar.getLunar();
@@ -364,15 +373,15 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
 
     final isWeekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
     
-    // 日期数字颜色
-    Color dateColor = Colors.black87;
-    if (isOutside) dateColor = Colors.grey[400]!;
+    // 日期数字颜色（使用主题文字色作为基准，再微调）
+    Color dateColor = Theme.of(context).colorScheme.onSurface;
+    if (isOutside) dateColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.3);
     else if (isToday) dateColor = primaryBlue;
     else if (isWeekend) dateColor = Colors.red[400]!;
 
     // 农历/节日文字颜色
-    Color lunarColor = Colors.grey;
-    if (isOutside) lunarColor = Colors.grey[300]!;
+    Color lunarColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.5);
+    if (isOutside) lunarColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.2);
     else if (isFestival) lunarColor = isWeekend ? Colors.red[400]! : primaryBlue;
     
     // 背景色

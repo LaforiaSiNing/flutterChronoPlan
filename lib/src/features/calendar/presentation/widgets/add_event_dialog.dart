@@ -264,167 +264,174 @@ class _AddEventDialogState extends ConsumerState<AddEventDialog> {
 
     return AlertDialog(
       title: Text(widget.eventToEdit != null ? '编辑日程' : '新建日程'),
-      content: SizedBox(
-        width: 500,
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                    labelText: '标题',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '请输入标题';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                Row(
+      // 对话框内容宽度自适应：窗口较宽时保持 500，较窄时按屏幕 80% 计算，防止溢出
+      content: Builder(
+        builder: (context) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final dialogWidth = screenWidth > 600 ? 500.0 : screenWidth * 0.8;
+          return SizedBox(
+            width: dialogWidth,
+            child: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: _buildTimePicker('开始时间', _startTime, (t) => setState(() => _startTime = t)),
+                    TextFormField(
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        labelText: '标题',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return '请输入标题';
+                        }
+                        return null;
+                      },
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildTimePicker('结束时间', _endTime, (t) => setState(() => _endTime = t)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _recurrenceType,
-                  decoration: const InputDecoration(
-                    labelText: '重复规则',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.repeat),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'none', child: Text('不重复')),
-                    DropdownMenuItem(value: 'daily', child: Text('每天')),   // 新增
-                    DropdownMenuItem(value: 'weekly', child: Text('每周')),
-                    DropdownMenuItem(value: 'monthly', child: Text('每月')),
-                    DropdownMenuItem(value: 'yearly', child: Text('每年')),
-                  ],
-                  onChanged: (v) => setState(() => _recurrenceType = v!),
-                ),
-                if (_recurrenceType == 'weekly') ...[
-                  const SizedBox(height: 16),
-                  _buildDayOfWeekSelector(),
-                ] else if (_recurrenceType == 'monthly') ...[
-                  const SizedBox(height: 16),
-                  _buildMonthDaySelector(),
-                ] else if (_recurrenceType == 'yearly') ...[
-                  const SizedBox(height: 16),
-                  _buildYearMonthDaySelector(),
-                ],
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _locationController,
-                  decoration: const InputDecoration(
-                    labelText: '地点 (可选)',
-                    prefixIcon: Icon(Icons.location_on_outlined),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  value: _priority,
-                  decoration: const InputDecoration(
-                    labelText: '优先级',
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 0, child: Text('低')),
-                    DropdownMenuItem(value: 1, child: Text('中')),
-                    DropdownMenuItem(value: 2, child: Text('高')),
-                  ],
-                  onChanged: (v) => setState(() => _priority = v!),
-                ),
-                 const SizedBox(height: 16),
-                DropdownButtonFormField<bool>(
-                  value: _isFlexibleHabit,
-                  decoration: const InputDecoration(
-                    labelText: '弹性计划',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.auto_awesome),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: false, child: Text('关闭')),
-                    DropdownMenuItem(value: true, child: Text('开启')),
-                  ],
-                  onChanged: (v) => setState(() => _isFlexibleHabit = v!),
-                ),
-                if (_isFlexibleHabit) ...[
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _flexibleHabit1Controller,
-                    decoration: const InputDecoration(
-                      labelText: '弹性计划 1',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _flexibleHabit2Controller,
-                    decoration: const InputDecoration(
-                      labelText: '弹性计划 2',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _flexibleHabit3Controller,
-                    decoration: const InputDecoration(
-                      labelText: '弹性计划 3',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                  // 后面保持原样不动...
-                
-                categoriesAsync.when(
-                  data: (categories) {
-                    // Ensure selected category exists in list or fallback
-                    if (categories.isNotEmpty && !categories.any((c) => c.name == _selectedCategory)) {
-                       _selectedCategory = categories.first.name;
-                    }
-                    return DropdownButtonFormField<String>(
-                      value: _selectedCategory,
-                      decoration: const InputDecoration(labelText: '分类'),
-                      items: categories.map((c) => DropdownMenuItem(
-                        value: c.name,
-                        child: Row(
-                          children: [
-                            Container(width: 12, height: 12, color: Color(c.colorValue), margin: const EdgeInsets.only(right: 8)),
-                            Text(c.name),
-                          ],
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTimePicker('开始时间', _startTime, (t) => setState(() => _startTime = t)),
                         ),
-                      )).toList(),
-                      onChanged: (v) => setState(() => _selectedCategory = v!),
-                    );
-                  },
-                  loading: () => const LinearProgressIndicator(),
-                  error: (e, _) => Text('加载分类失败: $e'),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildTimePicker('结束时间', _endTime, (t) => setState(() => _endTime = t)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _recurrenceType,
+                      decoration: const InputDecoration(
+                        labelText: '重复规则',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.repeat),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'none', child: Text('不重复')),
+                        DropdownMenuItem(value: 'daily', child: Text('每天')),   // 新增
+                        DropdownMenuItem(value: 'weekly', child: Text('每周')),
+                        DropdownMenuItem(value: 'monthly', child: Text('每月')),
+                        DropdownMenuItem(value: 'yearly', child: Text('每年')),
+                      ],
+                      onChanged: (v) => setState(() => _recurrenceType = v!),
+                    ),
+                    if (_recurrenceType == 'weekly') ...[
+                      const SizedBox(height: 16),
+                      _buildDayOfWeekSelector(),
+                    ] else if (_recurrenceType == 'monthly') ...[
+                      const SizedBox(height: 16),
+                      _buildMonthDaySelector(),
+                    ] else if (_recurrenceType == 'yearly') ...[
+                      const SizedBox(height: 16),
+                      _buildYearMonthDaySelector(),
+                    ],
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _locationController,
+                      decoration: const InputDecoration(
+                        labelText: '地点 (可选)',
+                        prefixIcon: Icon(Icons.location_on_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<int>(
+                      value: _priority,
+                      decoration: const InputDecoration(
+                        labelText: '优先级',
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 0, child: Text('低')),
+                        DropdownMenuItem(value: 1, child: Text('中')),
+                        DropdownMenuItem(value: 2, child: Text('高')),
+                      ],
+                      onChanged: (v) => setState(() => _priority = v!),
+                    ),
+                     const SizedBox(height: 16),
+                    DropdownButtonFormField<bool>(
+                      value: _isFlexibleHabit,
+                      decoration: const InputDecoration(
+                        labelText: '弹性计划',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.auto_awesome),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: false, child: Text('关闭')),
+                        DropdownMenuItem(value: true, child: Text('开启')),
+                      ],
+                      onChanged: (v) => setState(() => _isFlexibleHabit = v!),
+                    ),
+                    if (_isFlexibleHabit) ...[
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _flexibleHabit1Controller,
+                        decoration: const InputDecoration(
+                          labelText: '弹性计划 1',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _flexibleHabit2Controller,
+                        decoration: const InputDecoration(
+                          labelText: '弹性计划 2',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _flexibleHabit3Controller,
+                        decoration: const InputDecoration(
+                          labelText: '弹性计划 3',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                      // 后面保持原样不动...
+                    
+                    categoriesAsync.when(
+                      data: (categories) {
+                        // Ensure selected category exists in list or fallback
+                        if (categories.isNotEmpty && !categories.any((c) => c.name == _selectedCategory)) {
+                           _selectedCategory = categories.first.name;
+                        }
+                        return DropdownButtonFormField<String>(
+                          value: _selectedCategory,
+                          decoration: const InputDecoration(labelText: '分类'),
+                          items: categories.map((c) => DropdownMenuItem(
+                            value: c.name,
+                            child: Row(
+                              children: [
+                                Container(width: 12, height: 12, color: Color(c.colorValue), margin: const EdgeInsets.only(right: 8)),
+                                Text(c.name),
+                              ],
+                            ),
+                          )).toList(),
+                          onChanged: (v) => setState(() => _selectedCategory = v!),
+                        );
+                      },
+                      loading: () => const LinearProgressIndicator(),
+                      error: (e, _) => Text('加载分类失败: $e'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descriptionController,
+                      decoration: const InputDecoration(
+                        labelText: '备注',
+                        alignLabelWithHint: true,
+                      ),
+                      maxLines: 3,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: '备注',
-                    alignLabelWithHint: true,
-                  ),
-                  maxLines: 3,
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       actions: [
         TextButton(

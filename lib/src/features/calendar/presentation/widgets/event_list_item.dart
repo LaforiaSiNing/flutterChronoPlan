@@ -36,10 +36,14 @@ class EventListItem extends ConsumerWidget {
 
     final isRecurring = event.recurrenceRule != null || event.lunarRecurrence != null;
 
+    // 根据主题动态获取文字颜色，支持深色模式
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6), // 适当增加上下间距
+      // 上下间距从6缩小为4，压缩整体高度
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3), // 更轻的背景色
+      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3), // 更轻的背景色，自动跟随主题
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: Colors.grey.withOpacity(0.1)), // 更细的描边
@@ -56,7 +60,8 @@ class EventListItem extends ConsumerWidget {
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(12.0), // 卡片内边距
+          // 卡片内边距从12缩小为9，进一步压缩高度
+          padding: const EdgeInsets.all(9.0),
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,28 +88,30 @@ class EventListItem extends ConsumerWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           decoration: event.isCompleted ? TextDecoration.lineThrough : null,
-                          color: event.isCompleted ? Colors.grey : Colors.black87,
+                          // 使用主题颜色，深色模式自适应
+                          color: event.isCompleted ? onSurface.withOpacity(0.5) : onSurface,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      // 标题与时间间距从6减至4
+                      const SizedBox(height: 4),
                       
                       // 时间 & 地点
                       Row(
                         children: [
-                          Icon(Icons.access_time_rounded, size: 14, color: Colors.grey[600]),
+                          Icon(Icons.access_time_rounded, size: 14, color: onSurface.withOpacity(0.6)),
                           const SizedBox(width: 4),
                           Text(
                             '${DateFormat.Hm().format(event.startTime)} - ${DateFormat.Hm().format(event.endTime)}',
-                            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                            style: TextStyle(fontSize: 13, color: onSurface.withOpacity(0.6)),
                           ),
                           if (event.location != null && event.location!.isNotEmpty) ...[
                             const SizedBox(width: 12),
-                            Icon(Icons.location_on_outlined, size: 14, color: Colors.grey[600]),
+                            Icon(Icons.location_on_outlined, size: 14, color: onSurface.withOpacity(0.6)),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 event.location!,
-                                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                                style: TextStyle(fontSize: 13, color: onSurface.withOpacity(0.6)),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -113,8 +120,8 @@ class EventListItem extends ConsumerWidget {
                         ],
                       ),
                       
-                      // 分类标签 & 备注
-                      const SizedBox(height: 8),
+                      // 分类标签 & 备注：间距从8减至6
+                      const SizedBox(height: 6),
                       Row(
                         children: [
                           Container(
@@ -135,7 +142,8 @@ class EventListItem extends ConsumerWidget {
                                 event.description!,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                                // 备注颜色使用主题色，深色模式更清晰
+                                style: TextStyle(fontSize: 12, color: onSurface.withOpacity(0.5)),
                               ),
                             ),
                           ],
@@ -160,7 +168,7 @@ class EventListItem extends ConsumerWidget {
                     ],
                     // 根据是否为弹性计划显示不同的勾选组件
                     if (event.isFlexibleHabit) ...[
-                      // 弹性计划：三个子目标复选框
+                      // 弹性计划：三个子目标复选框，间距减半（从4改为2）
                       _buildFlexSubCheckbox(
                         context,
                         ref,
@@ -168,7 +176,7 @@ class EventListItem extends ConsumerWidget {
                         event.flexibleHabit1Completed,
                         (val) => _toggleFlexibleDate(ref, 1, val),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       _buildFlexSubCheckbox(
                         context,
                         ref,
@@ -176,7 +184,7 @@ class EventListItem extends ConsumerWidget {
                         event.flexibleHabit2Completed,
                         (val) => _toggleFlexibleDate(ref, 2, val),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       _buildFlexSubCheckbox(
                         context,
                         ref,
@@ -242,6 +250,7 @@ class EventListItem extends ConsumerWidget {
 
   /// 弹性计划子目标复选框构建器
   Widget _buildFlexSubCheckbox(BuildContext context, WidgetRef ref, String text, bool value, Function(bool?) onChanged) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Row(
       children: [
         SizedBox(
@@ -257,7 +266,8 @@ class EventListItem extends ConsumerWidget {
         Expanded(
           child: Text(
             text,
-            style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+            // 使用主题颜色，支持深色模式
+            style: TextStyle(fontSize: 13, color: onSurface.withOpacity(0.7)),
           ),
         ),
       ],
@@ -292,6 +302,8 @@ class EventListItem extends ConsumerWidget {
     }
     await repo.updateEvent(master);
     onCompletionChanged?.call();
+    // 强制刷新当天日程列表，使弹性计划勾选状态立即更新
+    ref.invalidate(dayEventsProvider(event.startTime));
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref) {
