@@ -165,15 +165,29 @@ class EventListItem extends ConsumerWidget {
                         value: event.isCompleted,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                         activeColor: categoryColor,
-                        onChanged: (val) async {////增加完成日程选项
+                        onChanged: (val) async {
                           final repo = ref.read(eventRepositoryProvider);
                           final isar = await repo.db;
                           final master = await isar.eventModels.get(event.id);
-                          if (master != null) {
+                          if (master == null) return;
+
+                          final dateStr = DateFormat('yyyy-MM-dd').format(event.startTime);
+
+                          if (master.recurrenceRule != null || master.lunarRecurrence != null) {
+                            // 重复事件：更新 completedDates 列表
+                            final dates = master.completedDates?.split(',').where((s) => s.isNotEmpty).toList() ?? [];
+                            if (val == true) {
+                              if (!dates.contains(dateStr)) dates.add(dateStr);
+                            } else {
+                              dates.remove(dateStr);
+                            }
+                            master.completedDates = dates.isEmpty ? null : dates.join(',');
+                          } else {
+                            // 普通事件：直接修改 isCompleted
                             master.isCompleted = val ?? false;
-                            await repo.updateEvent(master);
-                            onCompletionChanged?.call();
                           }
+                          await repo.updateEvent(master);
+                          onCompletionChanged?.call();
                         },//已完成日程选项。
                       ),
                     ),
