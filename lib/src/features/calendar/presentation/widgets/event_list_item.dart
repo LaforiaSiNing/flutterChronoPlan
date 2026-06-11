@@ -136,7 +136,7 @@ class EventListItem extends ConsumerWidget {
                             ),
                           ),
                           if (event.description != null && event.description!.isNotEmpty) ...[
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 event.description!,
@@ -164,7 +164,7 @@ class EventListItem extends ConsumerWidget {
                         message: '重复任务',
                         child: Icon(Icons.repeat, size: 18, color: Colors.grey[400]),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                     ],
                     // 根据是否为弹性计划显示不同的勾选组件
                     if (event.isFlexibleHabit) ...[
@@ -262,7 +262,7 @@ class EventListItem extends ConsumerWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
         Expanded(
           child: Text(
             text,
