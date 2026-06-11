@@ -92,8 +92,8 @@ class EventListItem extends ConsumerWidget {
                           color: event.isCompleted ? onSurface.withOpacity(0.5) : onSurface,
                         ),
                       ),
-                      // 标题与时间间距从6减至4
-                      const SizedBox(height: 4),
+                      // 标题与时间间距从6减至5
+                      const SizedBox(height: 5),
                       
                       // 时间 & 地点
                       Row(

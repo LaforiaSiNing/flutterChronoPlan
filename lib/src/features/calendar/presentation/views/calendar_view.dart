@@ -236,10 +236,10 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                           padding: const EdgeInsets.only(top: 8),
                           itemCount: events.length,
                           // 设置一个较矮的参考项，使每项高度固定为约 60（原来约 80）
-                          prototypeItem: SizedBox(
-                            height: 80,
-                            child: EventListItem(event: events.first),
-                          ),
+                         //rototypeItem: SizedBox(
+                          //height: 80,
+                           //hild: EventListItem(event: events.first),
+                         //,
                           itemBuilder: (context, index) {
                             final event = events[index];
                             return EventListItem(event: event);
