@@ -416,6 +416,11 @@ class EventRepository {
     }
 
     expanded.sort((a, b) => a.startTime.compareTo(b.startTime));
+    
+    // 过滤掉开始日期早于今天的实例（不显示过去的日程）
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    expanded.removeWhere((e) => e.startTime.isBefore(todayStart));
 
     assert(() {
       final jan1 = DateTime(2026, 1, 1);
