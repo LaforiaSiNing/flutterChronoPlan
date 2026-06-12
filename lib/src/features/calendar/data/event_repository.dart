@@ -64,6 +64,11 @@ class EventRepository {
     final allEvents = [...normalEvents, ...expandedEvents];
     allEvents.sort((a, b) => a.startTime.compareTo(b.startTime));
 
+    // 过滤已完全结束的事件（结束时间早于今天零点），避免显示过期日程
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    allEvents.removeWhere((e) => e.endTime.isBefore(todayStart));
+
     assert(() {
       // 仅 Debug：帮助定位“2026-01-01 没出现”的问题
       if (start.year == 2026 && start.month == 1) {
@@ -122,6 +127,11 @@ class EventRepository {
 
     final allEvents = [...normalEvents, ...expandedEvents];
     allEvents.sort((a, b) => a.startTime.compareTo(b.startTime));
+
+    // 过滤已完全结束的事件（结束时间早于今天零点），避免显示过期日程
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    allEvents.removeWhere((e) => e.endTime.isBefore(todayStart));
 
     return allEvents;
   }
